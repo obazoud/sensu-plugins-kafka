@@ -109,11 +109,18 @@ class ConsumerLagCheck < Sensu::Plugin::Check::CLI
 
     results = run_cmd(cmd)
 
-    lags = results.group_by { |h| h[:topic] }.map do |k, v|
-      Hash[k, v.inject(0) { |a, e| a + e[:lag].to_i }]
+    topics = results.group_by { |h| h[:topic] }
+    topics.delete_if { |x| config[:topic_excludes].include?(x.keys[0]) } if config[:topic_excludes]
+
+    [:offset, :logsize, :lag].each do |field|
+      topics.map do |k, v|
+        critical "Topic #{k} has partitions with #{field} < 0" if v.select { |w| w[field].to_i < 0 }
+      end
     end
 
-    lags.delete_if { |x| config[:topic_excludes].include?(x.keys[0]) } if config[:topic_excludes]
+    lags = topics.map do |k, v|
+      Hash[k, v.inject(0) { |a, e| a + e[:lag].to_i }]
+    end
 
     max_lag = lags.map(&:values).flatten.max
     max_topics = lags.select { |a| a.key(max_lag) }.map(&:keys).flatten
