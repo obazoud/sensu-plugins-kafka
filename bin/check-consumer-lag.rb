@@ -40,11 +40,6 @@ class ConsumerLagCheck < Sensu::Plugin::Check::CLI
          long:        '--kafka-home NAME',
          default:     '/opt/kafka'
 
-  option :topic,
-         description: 'Comma-separated list of consumer topics',
-         short:       '-t NAME',
-         long:        '--topic NAME'
-
   option :topic_excludes,
          description: 'Excludes consumer topics',
          short:       '-e NAME',
@@ -94,28 +89,45 @@ class ConsumerLagCheck < Sensu::Plugin::Check::CLI
 
   # run command and return a hash from the output
   # @param cms [String]
-  def run_cmd(cmd)
+  def run_offset(cmd)
     read_lines(cmd).drop(1).map do |line|
       line_to_hash(line, :group, :topic, :pid, :offset, :logsize, :lag, :owner)
     end
+  end
+
+  # run command and return a hash from the output
+  # @param cms [String]
+  def run_topics(cmd)
+    topics = []
+    read_lines(cmd).map do |line|
+      if !line.include?('__consumer_offsets') && !line.include?('marked for deletion')
+        topics.push(line)
+      end
+    end
+    topics
   end
 
   def run
     kafka_run_class = "#{config[:kafka_home]}/bin/kafka-run-class.sh"
     unknown "Can not find #{kafka_run_class}" unless File.exist?(kafka_run_class)
 
-    cmd = "#{kafka_run_class} kafka.tools.ConsumerOffsetChecker --group #{config[:group]} --zookeeper #{config[:zookeeper]}"
-    cmd += " --topic #{config[:topic]}" if config[:topic]
+    cmd_topics = "#{kafka_run_class} kafka.admin.TopicCommand --zookeeper #{config[:zookeeper]} --list"
+    topics_to_read = run_topics(cmd_topics)
+    topics_to_read.delete_if { |x| config[:topic_excludes].include?(x) } if config[:topic_excludes]
 
-    results = run_cmd(cmd)
+    cmd_offset = "#{kafka_run_class} kafka.tools.ConsumerOffsetChecker --group #{config[:group]} --zookeeper #{config[:zookeeper]}"
+    cmd_offset += " --topic #{topics_to_read.join(',')}" unless topics_to_read.empty?
 
-    topics = results.group_by { |h| h[:topic] }
-    topics.delete_if { |x| config[:topic_excludes].include?(x.keys[0]) } if config[:topic_excludes]
+    topics = run_offset(cmd_offset).group_by { |h| h[:topic] }
 
     [:offset, :logsize, :lag].each do |field|
       topics.map do |k, v|
-        critical "Topic #{k} has partitions with #{field} < 0" if v.select { |w| w[field].to_i < 0 }
+        critical "Topic #{k} has partitions with #{field} < 0" unless v.select { |w| w[field].to_i < 0 }.empty?
       end
+    end
+
+    topics.map do |k, v|
+      critical "Topic #{k} has partitions with no owner" unless v.select { |w| w[:owner] == 'none' }.empty?
     end
 
     lags = topics.map do |k, v|
@@ -151,8 +163,7 @@ class ConsumerLagCheck < Sensu::Plugin::Check::CLI
     ok "Group `#{config[:group]}`'s lag is ok (#{min_lag}/#{max_lag})"
 
   rescue => e
-    puts "Error: exception: #{e}"
-    puts "Error: exception: #{e.backtrace}"
+    puts "Error: exception: #{e} - #{e.backtrace}"
     critical
   end
 end
