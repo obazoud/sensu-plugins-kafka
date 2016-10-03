@@ -46,6 +46,13 @@ class ConsumerLagCheck < Sensu::Plugin::Check::CLI
          long:        '--topic-excludes NAME',
          proc:        proc { |a| a.split(',') }
 
+  option :autolist,
+         description: 'Auto list topics',
+         short:       '-a VALUE',
+         long:        '--auto-list VALUE',
+         boolean: true,
+         default: true
+
   option :zookeeper,
          description: 'ZooKeeper connect string',
          short:       '-z NAME',
@@ -111,9 +118,12 @@ class ConsumerLagCheck < Sensu::Plugin::Check::CLI
     kafka_run_class = "#{config[:kafka_home]}/bin/kafka-run-class.sh"
     unknown "Can not find #{kafka_run_class}" unless File.exist?(kafka_run_class)
 
-    cmd_topics = "#{kafka_run_class} kafka.admin.TopicCommand --zookeeper #{config[:zookeeper]} --list"
-    topics_to_read = run_topics(cmd_topics)
-    topics_to_read.delete_if { |x| config[:topic_excludes].include?(x) } if config[:topic_excludes]
+    topics_to_read = []
+    if config[:autolist].to_s == 'true'
+      cmd_topics = "#{kafka_run_class} kafka.admin.TopicCommand --zookeeper #{config[:zookeeper]} --list"
+      topics_to_read = run_topics(cmd_topics)
+      topics_to_read.delete_if { |x| config[:topic_excludes].include?(x) } if config[:topic_excludes]
+    end
 
     cmd_offset = "#{kafka_run_class} kafka.tools.ConsumerOffsetChecker --group #{config[:group]} --zookeeper #{config[:zookeeper]}"
     cmd_offset += " --topic #{topics_to_read.join(',')}" unless topics_to_read.empty?
