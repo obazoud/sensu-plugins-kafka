@@ -130,6 +130,8 @@ class ConsumerLagCheck < Sensu::Plugin::Check::CLI
 
     topics = run_offset(cmd_offset).group_by { |h| h[:topic] }
 
+    critical "Could not found topics/partitions" if topics.empty?
+
     [:offset, :logsize, :lag].each do |field|
       topics.map do |k, v|
         critical "Topic #{k} has partitions with #{field} < 0" unless v.select { |w| w[field].to_i < 0 }.empty?
