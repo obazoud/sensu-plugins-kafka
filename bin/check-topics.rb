@@ -81,9 +81,8 @@ class TopicCheck < Sensu::Plugin::Check::CLI
 
 # {:_=>"Isr:", :topic=>"__consumer_offsets", :partition=>"49", :leader=>"172314554", :replicas=>"172314554,172314557,172314558", :isr=>"172314554,172314557,172314558"}
 
-    topics.each |name, topic| do
+    topics.each do |name, topic|
       topic.inject(0) { |a, e| [a, e[:replicas].length].max }
-      end
     end
     ok
 
