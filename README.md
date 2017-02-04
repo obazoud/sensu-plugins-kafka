@@ -1,5 +1,7 @@
 ## Sensu-Plugins-Kafka
 
+[![Build Status](https://travis-ci.org/obazoud/sensu-plugins-kafka.svg?branch=master)](https://travis-ci.org/obazoud/sensu-plugins-kafka)
+
 ## Functionality
 
 **check-consumer-lag.rb**
