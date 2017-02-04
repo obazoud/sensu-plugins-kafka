@@ -12,3 +12,15 @@ script:
   - bundle exec rake default
   - gem build sensu-plugins-kafka.gemspec
   - gem install sensu-plugins-kafka-*.gem
+
+deploy:
+  provider: rubygems
+  api_key:
+    secure: "Y+TFncxq/QPpLfn8tWXl8Elcq5MIKFYA9LYbslPbF9ZxV7En5ccxEsSuI6/iKaEgUNPEw+OiuRxsjpN4vFWsTGtYXxTsCksgrqBEtSpHNW6zgWTLG8f3d78qRCZYQejPa4RphC9rn6n/MMSpNNrT8nUKKoi6d0FR0mcsHkD17P7tZeVNtV0+VUM2kGirGA/eUhO4+LyIJmPYSZm20EXORG6E/QcWNdzC8SmziQvNFTrNQid42NaKQUGaSGiEzbNuGyLUzY4G6T4fQ/jTmKCuCnDBm1hd6WZ7Lza8fkjdP4FYS6zGUqdvF1DQE6hPzzOc75M5mU8slPAFZJuyRRakjyT+FNntgEIt2GqWqm8WrYmfp5RPaTg27L8fSym+axKBMAMiqIqbPVvWRsxLBQVnmE4xtn2u4m48WPDJwldNlP+oFUEFkp2GwNYvc42CcKbx03yyMnDx8s8+Gk+N65NFJvUAnwye1CMieFMvv3LQ7uBLr/+X54ct8VqUrgy9g78/jcSuJJ4eUHjXwj3eyNfgBbhqflcePrXlEAtwN2nwsWaooUVhdV2xWR8GN4hdI07SW7UhrVJarabEuHxzeWithv1pWPPngTD0ypn8eWeVbAuQ42kmCabLOWa6qFfoZ+uOI125TAlUXiCs6fj5VnNUCg44qypgiXXMFpi+M9zUlwg="
+  gem: sensu-plugins-kafka
+  on:
+    tags: true
+    rvm: 2.1
+    rvm: 2.2
+    rvm: 2.3.0
+    repo: obazoud/sensu-plugins-kafka
