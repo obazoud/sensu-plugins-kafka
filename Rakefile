@@ -1,24 +1,18 @@
 require 'bundler/gem_tasks'
-require 'rspec/core/rake_task'
-require 'rubocop/rake_task'
 require 'github/markup'
 require 'redcarpet'
+require 'rspec/core/rake_task'
+require 'rubocop/rake_task'
 require 'yard'
 require 'yard/rake/yardoc_task'
+require 'English' # needed for $CHILD_STATUS vs $?
 
-desc 'Don\'t run Rubocop for unsupported versions'
-begin
-  if RUBY_VERSION >= '2.0.0'
-    args = [:spec, :make_bin_executable, :yard, :rubocop]
-  else
-    args = [:spec, :make_bin_executable, :yard]
-  end
-end
+args = [:spec, :make_bin_executable, :yard, :rubocop, :check_binstubs]
 
 YARD::Rake::YardocTask.new do |t|
-  OTHER_PATHS = %w()
+  OTHER_PATHS = %w().freeze
   t.files = ['lib/**/*.rb', 'bin/**/*.rb', OTHER_PATHS]
-  t.options = %w(--markup-provider=redcarpet --markup=markdown --main=README.md --files CHANGELOG.md,CONTRIBUTING.md)
+  t.options = %w(--markup-provider=redcarpet --markup=markdown --main=README.md --files CHANGELOG.md)
 end
 
 RuboCop::RakeTask.new
@@ -32,20 +26,16 @@ task :make_bin_executable do
   `chmod -R +x bin/*`
 end
 
-desc 'Retrieve the current version'
-task :version do
-  puts SensuPluginsKafka::Version.json_version
-end
-
-desc 'Bump the PATCH version'
-task :bump do
-  version_file = 'lib/sensu-plugins-kafka/version.rb'
-
-  # Read the file, bump the PATCH version
-  contents = File.read(version_file).gsub(/(PATCH = )(\d+)/) { |_| Regexp.last_match[1] + (Regexp.last_match[2].to_i + 1).to_s }
-
-  # Write the new contents of the file
-  File.open(version_file, 'w') { |file| file.puts contents }
+desc 'Test for binstubs'
+task :check_binstubs do
+  bin_list = Gem::Specification.load('sensu-plugins-aws.gemspec').executables
+  bin_list.each do |b|
+    `which #{ b }`
+    unless $CHILD_STATUS.success?
+      puts "#{b} was not a binstub"
+      exit
+    end
+  end
 end
 
 task default: args
