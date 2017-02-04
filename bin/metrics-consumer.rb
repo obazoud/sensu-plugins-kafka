@@ -78,7 +78,7 @@ class ConsumerOffsetMetrics < Sensu::Plugin::Metric::CLI::Graphite
   end
 
   # run command and return a hash from the output
-  # @param cms [String]
+  # @param cmd [String]
   def run_cmd(cmd)
     read_lines(cmd).drop(1).map do |line|
       line_to_hash(line, :group, :topic, :pid, :offset, :logsize, :lag, :owner)

@@ -61,7 +61,7 @@ class TopicCheck < Sensu::Plugin::Check::CLI
   end
 
   # run command and return a hash from the output
-  # @param cms [String]
+  # @param cmd [String]
   def run_cmd(cmd)
     read_lines(cmd).drop(1).map do |line|
       line_to_hash(line, :_, :topic, :_, :partition, :_, :leader, :_, :replicas, :_, :isr)
