@@ -10,5 +10,5 @@ rvm:
 
 script:
   - bundle exec rake default
-  - gem build sensu-plugins-aws.gemspec
+  - gem build sensu-plugins-kafka.gemspec
   - gem install sensu-plugins-kafka-*.gem

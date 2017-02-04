@@ -73,15 +73,13 @@ class TopicCheck < Sensu::Plugin::Check::CLI
     unknown "Can not find #{kafka_topics}" unless File.exist?(kafka_topics)
 
     cmd_details = "#{kafka_topics} --describe --zookeeper #{config[:zookeeper]} | grep -v ReplicationFactor"
-    cmd_global = "#{kafka_topics} --describe --zookeeper #{config[:zookeeper]} | grep ReplicationFactor"
-
     results = run_cmd(cmd_details)
 
     topics = results.group_by { |h| h[:topic] }
 
-# {:_=>"Isr:", :topic=>"__consumer_offsets", :partition=>"49", :leader=>"172314554", :replicas=>"172314554,172314557,172314558", :isr=>"172314554,172314557,172314558"}
+    # {:_=>"Isr:", :topic=>"__consumer_offsets", :partition=>"49", :leader=>"172314554", :replicas=>"172314554,172314557,172314558", :isr=>"172314554,172314557,172314558"}
 
-    topics.each do |name, topic|
+    topics.each do |_, topic|
       topic.inject(0) { |a, e| [a, e[:replicas].length].max }
     end
     ok
