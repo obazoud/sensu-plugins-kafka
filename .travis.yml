@@ -20,7 +20,4 @@ deploy:
   gem: sensu-plugins-kafka
   on:
     tags: true
-    rvm: 2.1
-    rvm: 2.2
-    rvm: 2.3.0
     repo: obazoud/sensu-plugins-kafka
