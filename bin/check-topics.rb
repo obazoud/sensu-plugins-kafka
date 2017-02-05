@@ -15,7 +15,7 @@
 #   gem: sensu-plugin
 #
 # USAGE:
-#   ./check-consumer-lag
+#   ./check-topics
 #
 # NOTES:
 #
