@@ -10,6 +10,11 @@ This CHANGELOG follows the format listed at [Keep A Changelog](http://keepachang
 ### Fixed
 ### Changed
 
+## [0.4.0] - 2017-02-09
+
+### Added
+- Add option to check topic's config
+
 ## [0.3.0] - 2017-02-09
 
 ### Added
