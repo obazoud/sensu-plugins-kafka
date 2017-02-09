@@ -10,6 +10,11 @@ This CHANGELOG follows the format listed at [Keep A Changelog](http://keepachang
 ### Fixed
 ### Changed
 
+## [0.3.0] - 2017-02-09
+
+### Added
+- check-topic.rb: option to check partitions and replication factor
+
 ## [0.2.0] - 2017-02-09
 
 ### Breaking Changes
