@@ -45,7 +45,7 @@ class TopicsCheck < Sensu::Plugin::Check::CLI
   def run
     z = Zookeeper.new(config[:zookeeper])
     
-    live_topics = z.get_children(path: "/brokers/topics")[:children].sort
+    live_topics = z.get_children(path: '/brokers/topics')[:children].sort
 
     critical "#{topic[:name]} not found" unless live_topics.include? topic[:name]
 
