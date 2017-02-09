@@ -35,19 +35,21 @@ class TopicsCheck < Sensu::Plugin::Check::CLI
          description: 'ZooKeeper connect string (host:port,..)',
          short:       '-z ZOOKEEPER',
          long:        '--zookeeper ZOOKEEPER',
-         default:     'localhost:2181'
+         default:     'localhost:2181',
+         required:    true
 
   option :name,
          description: 'Topic name',
          short: '-n TOPIC_NAME',
-         long: '--name TOPIC_NAME'
+         long: '--name TOPIC_NAME',
+         required:    true
 
   def run
     z = Zookeeper.new(config[:zookeeper])
 
     live_topics = z.get_children(path: '/brokers/topics')[:children].sort
 
-    critical "#{topic[:name]} not found" unless live_topics.include? topic[:name]
+    critical "#{config[:name]} not found" unless live_topics.include? config[:name]
 
     ok
   rescue => e
