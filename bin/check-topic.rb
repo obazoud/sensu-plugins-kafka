@@ -44,13 +44,37 @@ class TopicsCheck < Sensu::Plugin::Check::CLI
          long: '--name TOPIC_NAME',
          required:    true
 
+  option :partitions,
+         description: 'Partitions',
+         short: '-p PARTITIONS_COUNT',
+         long: '--partitions TOPIC_NAME',
+         proc: proc(&:to_i)
+
+  option :replication_factor,
+         description: 'Replication factor',
+         short: '-r REPLICATION_FACTOR',
+         long: '--replication-factor REPLICATION_FACTOR',
+         proc: proc(&:to_i)
+
   def run
     z = Zookeeper.new(config[:zookeeper])
 
-    live_topics = z.get_children(path: '/brokers/topics')[:children].sort
+    topics = z.get_children(path: '/brokers/topics')[:children].sort
 
-    critical "#{config[:name]} not found" unless live_topics.include? config[:name]
+    critical "Topic '#{config[:name]}' not found" unless topics.include? config[:name]
 
+    if config.key?(:partitions) || config.key?(:replication_factor)
+      partitions_data = z.get(path: "/brokers/topics/#{config[:name]}")[:data]
+      partitions = JSON.parse(partitions_data)['partitions']
+
+      critical "Topic '#{config[:name]}' has #{partitions.size} partitions, expecting #{config[:partitions]}" if config.key?(:partitions) && partitions.size != config[:partitions]
+
+      if config.key?(:replication_factor)
+        min = partitions.min_by { |_, brokers| brokers.size }[1].length
+        max = partitions.max_by { |_, brokers| brokers.size }[1].length
+        critical "Topic '#{config[:name]}' RF is between #{min} and #{max}, expecting #{config[:replication_factor]}" if config[:replication_factor] != min || min != max
+      end
+    end
     ok
   rescue => e
     puts "Error: #{e.backtrace}"
