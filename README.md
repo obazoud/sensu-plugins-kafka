@@ -1,6 +1,6 @@
 ## Sensu-Plugins-Kafka
 
-[![Build Status](https://travis-ci.org/obazoud/sensu-plugins-kafka.svg?branch=master)](https://travis-ci.org/obazoud/sensu-plugins-kafka)
+[![Build Status](https://travis-ci.org/obazoud/sensu-plugins-kafka.svg?branch=master)](https://travis-ci.org/obazoud/sensu-plugins-kafka) [![Gem Version](https://badge.fury.io/rb/sensu-plugins-kafka.svg)](https://badge.fury.io/rb/sensu-plugins-kafka)
 
 ## Functionality
 
