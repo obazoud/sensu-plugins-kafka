@@ -49,6 +49,7 @@ class TopicsCheck < Sensu::Plugin::Check::CLI
 
     critical "#{topic[:name]} not found" unless live_topics.include? topic[:name]
 
+    ok
   rescue => e
     puts "Error: #{e.backtrace}"
     critical "Error: #{e}"
