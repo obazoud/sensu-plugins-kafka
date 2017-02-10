@@ -50,8 +50,8 @@ class TopicsCheck < Sensu::Plugin::Check::CLI
 
     topics = z.get_children(path: '/brokers/topics')[:children].sort
 
-    critical "Topics '#{config[:name] - topics}' not found" if (config[:name] - topics).empty?
-    critical "Topics '#{topics - config[:name]}' not checked" if (topics - config[:name]).empty?
+    critical "Topics '#{config[:name] - topics}' not found" unless (config[:name] - topics).empty?
+    critical "Topics '#{topics - config[:name]}' not checked" unless (topics - config[:name]).empty?
 
     ok
   rescue => e
