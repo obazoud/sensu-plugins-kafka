@@ -62,6 +62,13 @@ class TopicsCheck < Sensu::Plugin::Check::CLI
          long: '--configs CONFIG',
          proc: proc { |a| JSON.parse(a) }
 
+  option :leader,
+         description: 'Check leader',
+         short: '-l LEADER',
+         long: '--leader LEADER',
+         default: false,
+         boolean: false
+
   def run
     z = Zookeeper.new(config[:zookeeper])
 
@@ -70,24 +77,35 @@ class TopicsCheck < Sensu::Plugin::Check::CLI
     critical "Topic '#{config[:name]}' not found" unless topics.include? config[:name]
 
     if config.key?(:partitions) || config.key?(:replication_factor)
+      brokers = z.get_children(path: '/brokers/ids')[:children].map(&:to_i)
       partitions_data = z.get(path: "/brokers/topics/#{config[:name]}")[:data]
       partitions = JSON.parse(partitions_data)['partitions']
 
       critical "Topic '#{config[:name]}' has #{partitions.size} partitions, expecting #{config[:partitions]}" if config.key?(:partitions) && partitions.size != config[:partitions]
 
       if config.key?(:replication_factor)
-        min = partitions.min_by { |_, brokers| brokers.size }[1].length
-        max = partitions.max_by { |_, brokers| brokers.size }[1].length
+        min = partitions.min_by { |_, b| b.size }[1].length
+        max = partitions.max_by { |_, b| b.size }[1].length
         critical "Topic '#{config[:name]}' RF is between #{min} and #{max}, expecting #{config[:replication_factor]}" if config[:replication_factor] != min || min != max
+      end
+
+      if config[:leader]
+        partitions.each do |num, replica|
+          state_json = z.get(path: "/brokers/topics/#{config[:name]}/partitions/#{num}/state")[:data]
+          state = JSON.parse(state_json)
+          critical "Topic '#{config[:name]}', unknown leader #{state['leader']}" unless brokers.include? state['leader']
+          critical "Topic '#{config[:name]}', partition #{num} preferred replica is not #{replica[0]}" unless replica[0] == state['leader']
+        end
       end
 
       if config.key?(:configs)
         config_data = z.get(path: "/config/topics/#{config[:name]}")[:data]
         configs = JSON.parse(config_data)['config']
         config[:configs].each do |k, v|
-          critical "Topic '#{config[:name]}': config #{k} is /#{v}, expecting #{configs[k]}" if !configs.key?(k) || configs[k].to_s != v.to_s
+          critical "Topic '#{config[:name]}': config #{k} = #{v}, expecting #{configs[k]}" if !configs.key?(k) || configs[k].to_s != v.to_s
         end
       end
+
     end
     ok
   rescue => e
