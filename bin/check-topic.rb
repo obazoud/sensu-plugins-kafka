@@ -62,6 +62,13 @@ class TopicsCheck < Sensu::Plugin::Check::CLI
          long: '--configs CONFIG',
          proc: proc { |a| JSON.parse(a) }
 
+  option :replicas,
+         description: 'Check replicats',
+         short: '-a',
+         long: '--replicas',
+         default: false,
+         boolean: false
+
   option :leader,
          description: 'Check leader',
          short: '-l',
@@ -87,6 +94,12 @@ class TopicsCheck < Sensu::Plugin::Check::CLI
         min = partitions.min_by { |_, b| b.size }[1].length
         max = partitions.max_by { |_, b| b.size }[1].length
         critical "Topic '#{config[:name]}' RF is between #{min} and #{max}, expecting #{config[:replication_factor]}" if config[:replication_factor] != min || min != max
+      end
+
+      if config[:replicas]
+        partitions.each do |num, replica|
+          critical "Topic '#{config[:name]}', partition #{num}: unknown replica #{replica - brokers}" unless (replica - brokers).empty?
+        end
       end
 
       if config[:leader]
