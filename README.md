@@ -8,6 +8,8 @@
 
 **check-topic.rb**
 
+**check-topics-name.rb**
+
 **metrics-consumer.rb**
 
 ## Files
