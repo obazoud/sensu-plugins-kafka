@@ -10,6 +10,11 @@ This CHANGELOG follows the format listed at [Keep A Changelog](http://keepachang
 ### Fixed
 ### Changed
 
+## [0.6.1] - 2017-02-10
+
+### Fixed
+- Fix check-topics-name.rb
+
 ## [0.6.0] - 2017-02-10
 
 ### Added
