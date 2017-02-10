@@ -64,8 +64,8 @@ class TopicsCheck < Sensu::Plugin::Check::CLI
 
   option :leader,
          description: 'Check leader',
-         short: '-l LEADER',
-         long: '--leader LEADER',
+         short: '-l',
+         long: '--leader',
          default: false,
          boolean: false
 
