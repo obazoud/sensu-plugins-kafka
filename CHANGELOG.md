@@ -10,7 +10,7 @@ This CHANGELOG follows the format listed at [Keep A Changelog](http://keepachang
 ### Fixed
 ### Changed
 
-## [Unreleased]
+## [0.7.0]
 
 ### Added
 - Add option to check topic's replicas
