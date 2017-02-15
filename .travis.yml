@@ -1,11 +1,12 @@
 language: ruby
+
 cache:
   - bundler
+
 install:
   - bundle install
+
 rvm:
-  - 2.1
-  - 2.2.1
   - 2.3.0
 
 script:
