@@ -10,6 +10,11 @@ This CHANGELOG follows the format listed at [Keep A Changelog](http://keepachang
 ### Fixed
 ### Changed
 
+## [Unreleased]
+
+### Breaking Changes
+- Refactoring check-consumer-lag to remove shell/jvm execution
+
 ## [0.7.0]
 
 ### Added
