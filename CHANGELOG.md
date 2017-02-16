@@ -10,7 +10,7 @@ This CHANGELOG follows the format listed at [Keep A Changelog](http://keepachang
 ### Fixed
 ### Changed
 
-## [Unreleased]
+## [0.10.0] - 2017-02-16
 
 ### Added
 - check-topic.rb: check isr
