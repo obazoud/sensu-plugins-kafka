@@ -106,8 +106,10 @@ class TopicsCheck < Sensu::Plugin::Check::CLI
         partitions.each do |num, replica|
           state_json = z.get(path: "/brokers/topics/#{config[:name]}/partitions/#{num}/state")[:data]
           state = JSON.parse(state_json)
-          critical "Topic '#{config[:name]}', unknown leader #{state['leader']}" unless brokers.include? state['leader']
-          critical "Topic '#{config[:name]}', partition #{num} preferred replica is not #{replica[0]}" unless replica[0] == state['leader']
+          critical "Topic '#{config[:name]}', partition #{num}: unknown leader #{state['leader']}" unless brokers.include? state['leader']
+          critical "Topic '#{config[:name]}', partition #{num}: preferred replica is not #{replica[0]}" unless replica[0] == state['leader']
+          critical "Topic '#{config[:name]}', partition #{num}: isr is not consistent" unless (replica - state['isr']).empty? && (state['isr'] - replica).empty?
+          critical "Topic '#{config[:name]}', partition #{num}: unknown isr #{state['isr'] - brokers}" unless (state['isr'] - brokers).empty?
         end
       end
 
