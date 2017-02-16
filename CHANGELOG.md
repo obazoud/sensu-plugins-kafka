@@ -10,7 +10,7 @@ This CHANGELOG follows the format listed at [Keep A Changelog](http://keepachang
 ### Fixed
 ### Changed
 
-## [Unreleased]
+## [0.8.1]
 
 ### Fixed
 - check-consumer-lag: remove celluloid (temporary), fix data structure, fix partition_owner function
