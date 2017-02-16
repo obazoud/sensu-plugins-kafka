@@ -26,6 +26,10 @@
 
 require 'sensu-plugin/metric/cli'
 
+require 'json'
+require 'poseidon'
+require 'zookeeper'
+
 class ConsumerOffsetMetrics < Sensu::Plugin::Metric::CLI::Graphite
   option :scheme,
          description: 'Metric naming scheme, text to prepend to metric',
@@ -38,12 +42,6 @@ class ConsumerOffsetMetrics < Sensu::Plugin::Metric::CLI::Graphite
          short:       '-g NAME',
          long:        '--group NAME',
          required:    true
-
-  option :kafka_home,
-         description: 'Kafka home',
-         short:       '-k NAME',
-         long:        '--kafka-home NAME',
-         default:     '/opt/kafka'
 
   option :topic,
          description: 'Comma-separated list of consumer topics',
@@ -62,51 +60,46 @@ class ConsumerOffsetMetrics < Sensu::Plugin::Metric::CLI::Graphite
          long:        '--zookeeper NAME',
          default:     'localhost:2181'
 
-  # read the output of a command
-  # @param cmd [String] the command to read the output from
-  def read_lines(cmd)
-    IO.popen(cmd + ' 2>&1') do |child|
-      child.read.split("\n")
-    end
-  end
-
-  # create a hash from the output of each line of a command
-  # @param line [String]
-  # @param cols
-  def line_to_hash(line, *cols)
-    Hash[cols.zip(line.strip.split(/\s+/, cols.size))]
-  end
-
-  # run command and return a hash from the output
-  # @param cmd [String]
-  def run_cmd(cmd)
-    read_lines(cmd).drop(1).map do |line|
-      line_to_hash(line, :group, :topic, :pid, :offset, :logsize, :lag, :owner)
-    end
-  end
-
   def run
-    begin
-      kafka_run_class = "#{config[:kafka_home]}/bin/kafka-run-class.sh"
-      unknown "Can not find #{kafka_run_class}" unless File.exist?(kafka_run_class)
+    z = Zookeeper.new(config[:zookeeper])
 
-      cmd = "#{kafka_run_class} kafka.tools.ConsumerOffsetChecker --group #{config[:group]} --zookeeper #{config[:zookeeper]}"
-      cmd += " --topic #{config[:topic]}" if config[:topic]
+    group = config[:group]
+    topics = kafka_topics(z, group)
 
-      results = run_cmd(cmd)
+    critical 'Could not found topics' if topics.empty?
 
-      [:offset, :logsize, :lag].each do |field|
-        sum_by_group = results.group_by { |h| h[:topic] }.map do |k, v|
-          Hash[k, v.inject(0) { |a, e| a + e[field].to_i }]
-        end
-        sum_by_group.delete_if { |x| config[:topic_excludes].include?(x.keys[0]) } if config[:topic_excludes]
-        sum_by_group.each do |x|
-          output "#{config[:scheme]}.#{config[:group]}.#{x.keys[0]}.#{field}", x.values[0]
-        end
+    consumers = {}
+    topics.each do |topic|
+      consumers[topic] = []
+
+      topics_partitions(z, topic).each do |partition|
+        leader = leader_broker(z, topic, partition)
+        consumer = Poseidon::PartitionConsumer.new('CheckConsumerLag', leader['host'], leader['port'], topic, partition, :latest_offset)
+        logsize = consumer.next_offset
+
+        offset = consumer_offset(z, group, topic, partition)
+
+        lag = logsize - offset
+        consumers[topic].push(partition: partition, logsize: logsize, offset: offset, lag: lag)
       end
-    rescue => e
-      critical "Error: exception: #{e}"
+    end
+
+    [:offset, :logsize, :lag].each do |field|
+      consumers.each do |k, v|
+        critical "Topic #{k} has #{field} < 0 '#{v[field]}'" unless v.select { |w| w[field].to_i < 0 }.empty?
+      end
+    end
+
+    [:offset, :logsize, :lag].each do |field|
+      sum_by_group = consumers.map do |k, v|
+        Hash[k, v.inject(0) { |a, e| a + e[field].to_i }]
+      end
+      sum_by_group.each do |x|
+        output "#{config[:scheme]}.#{config[:group]}.#{x.keys[0]}.#{field}", x.values[0]
+      end
     end
     ok
+  rescue => e
+    critical "Error: exception: #{e}"
   end
 end

@@ -20,8 +20,8 @@
 
 [Installation and Setup](http://sensu-plugins.io/docs/installation_instructions.html)
 
-Kafka installation is required where checks will be made.
-
-Kafka version: 0.8.2.x
+Tested on:
+* Zookeeper version: 3.4.6
+* Kafka version: 0.8.2.x
 
 Note:  In addition to the standard installation requirements the installation of this gem will require compiling the nokogiri gem.  Due to this you'll need certain developmemnt packages on your system.  On Ubuntu systems install build-essential, libxml2-dev and zlib1g-dev.  On CentOS install gcc and zlib-devel.
