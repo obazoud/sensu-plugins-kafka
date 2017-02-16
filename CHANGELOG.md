@@ -12,6 +12,11 @@ This CHANGELOG follows the format listed at [Keep A Changelog](http://keepachang
 
 ## [Unreleased]
 
+### Fixed
+- check-consumer-lag: remove celluloid (temporary), fix data structure, fix partition_owner function
+
+## [0.8.0]
+
 ### Breaking Changes
 - Refactoring check-consumer-lag to remove shell/jvm execution
 
