@@ -10,22 +10,22 @@ This CHANGELOG follows the format listed at [Keep A Changelog](http://keepachang
 ### Fixed
 ### Changed
 
-## [Unreleased]
+## [0.9.0] - 2017-02-16
 
 ### Breaking Changes
 - Refactoring metrics-consumer-lag to remove shell/jvm execution
 
-## [0.8.1]
+## [0.8.1] - 2017-02-16
 
 ### Fixed
 - check-consumer-lag: remove celluloid (temporary), fix data structure, fix partition_owner function
 
-## [0.8.0]
+## [0.8.0] - 2017-02-15
 
 ### Breaking Changes
 - Refactoring check-consumer-lag to remove shell/jvm execution
 
-## [0.7.0]
+## [0.7.0] - 2017-02-10
 
 ### Added
 - Add option to check topic's replicas
