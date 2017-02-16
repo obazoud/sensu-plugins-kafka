@@ -27,16 +27,9 @@
 
 require 'sensu-plugin/check/cli'
 
-require 'celluloid-io'
 require 'json'
 require 'poseidon'
 require 'zookeeper'
-
-module Poseidon
-  class Connection
-    TCPSocket = Celluloid::IO::TCPSocket
-  end
-end
 
 class ConsumerLagCheck < Sensu::Plugin::Check::CLI
   option :group,
@@ -89,8 +82,8 @@ class ConsumerLagCheck < Sensu::Plugin::Check::CLI
     zk.get(path: "/consumers/#{group}/offsets/#{topic}/#{partition}")[:data].to_i
   end
 
-  def partition_owner(zk, group, partition)
-    zk.get(path: "/consumers/#{group}/offsets/#{owners}/#{partition}")[:data]
+  def partition_owner(zk, group, topic, partition)
+    zk.get(path: "/consumers/#{group}/owners/#{topic}/#{partition}")[:data]
   end
 
   def run
@@ -103,10 +96,10 @@ class ConsumerLagCheck < Sensu::Plugin::Check::CLI
 
     consumers = {}
     topics.each do |topic|
-      consumers[topic] = {}
+      consumers[topic] = []
 
       topics_partitions(z, topic).each do |partition|
-        owner = partition_owner(z, group, partition)
+        owner = partition_owner(z, group, topic, partition)
 
         leader = leader_broker(z, topic, partition)
         consumer = Poseidon::PartitionConsumer.new('CheckConsumerLag', leader['host'], leader['port'], topic, partition, :latest_offset)
@@ -115,27 +108,22 @@ class ConsumerLagCheck < Sensu::Plugin::Check::CLI
         offset = consumer_offset(z, group, topic, partition)
 
         lag = logsize - offset
-
-        consumers[topic][:partition] = partition
-        consumers[topic][:logsize] = logsize
-        consumers[topic][:offset] = offset
-        consumers[topic][:lag] = lag
-        consumers[topic][:owner] = owner
+        consumers[topic].push(partition: partition, logsize: logsize, offset: offset, lag: lag, owner: owner)
       end
     end
 
     [:offset, :logsize, :lag].each do |field|
-      consumers.map do |k, v|
-        critical "Topic #{k} has partitions with #{field} < 0" unless v.select { |w| w[field].to_i < 0 }.empty?
+      consumers.each do |k, v|
+        critical "Topic #{k} has #{field} < 0 '#{v[field]}'" unless v.select { |w| w[field].to_i < 0 }.empty?
       end
     end
 
-    consumers.map do |k, v|
-      critical "Topic #{k} has partitions with no owner" unless v.select { |w| w[:owner] == 'none' }.empty?
+    consumers.each do |k, v|
+      critical "Topic #{k} has partitions with no owner '#{v[:owner]}'" unless v.select { |w| w[:owner] == 'none' }.empty?
     end
 
-    lags = topics.map do |k, v|
-      Hash[k, v.inject(0) { |a, e| a + e[:lag].to_i }]
+    lags = consumers.map do |k, v|
+      Hash[k, v.inject(0) { |a, e| a + e[:lag] }]
     end
 
     max_lag = lags.map(&:values).flatten.max
