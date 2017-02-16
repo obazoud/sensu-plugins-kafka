@@ -10,6 +10,11 @@ This CHANGELOG follows the format listed at [Keep A Changelog](http://keepachang
 ### Fixed
 ### Changed
 
+## [0.9.1] - 2017-02-16
+
+### Fixed
+- add missing methods
+
 ## [0.9.0] - 2017-02-16
 
 ### Breaking Changes
