@@ -132,6 +132,7 @@ class ConsumerLagCheck < Sensu::Plugin::Check::CLI
     min_lag = lags.map(&:values).flatten.min
     min_topics = lags.select { |a| a.key(min_lag) }.map(&:keys).flatten
 
+    # Global
     [:over, :under].each do |over_or_under|
       [:critical, :warning].each do |severity|
         threshold = config[:"#{severity}_#{over_or_under}"]
@@ -147,6 +148,32 @@ class ConsumerLagCheck < Sensu::Plugin::Check::CLI
           if min_lag < threshold.to_i
             msg = "Topics `#{min_topics}` for the group `#{config[:group]}` lag: #{min_lag} (<= #{threshold})"
             send severity, msg
+          end
+        end
+      end
+    end
+
+    # Per partition
+    [:over, :under].each do |over_or_under|
+      [:critical, :warning].each do |severity|
+        threshold = config[:"#{severity}_#{over_or_under}"]
+
+        next unless threshold
+
+        consumers.each do |k, v|
+          v.each do |partition|
+            case over_or_under
+            when :over
+              if partition[:lag].to_f > (threshold.to_f * 1.33 / v.size)
+                msg = "Topics `#{k}` partition #{partition[:partition]} lag: #{partition[:lag]} (>= #{threshold.to_f * 1.33 / v.size})"
+                send severity, msg
+              end
+            when :under
+              if min_lag < (threshold.to_f / v.size)
+                msg = "Topics `#{k}` partition #{partition[:partition]} lag: #{partition[:lag]} (<= #{threshold.to_f / v.size})"
+                send severity, msg
+              end
+            end
           end
         end
       end
