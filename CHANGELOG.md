@@ -10,6 +10,11 @@ This CHANGELOG follows the format listed at [Keep A Changelog](http://keepachang
 ### Fixed
 ### Changed
 
+## [Unreleased]
+
+### Added
+- check-consumer-lag: threshold per partition
+
 ## [0.10.0] - 2017-02-16
 
 ### Added
