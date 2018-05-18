@@ -2,6 +2,10 @@
 
 [![Build Status](https://travis-ci.org/obazoud/sensu-plugins-kafka.svg?branch=master)](https://travis-ci.org/obazoud/sensu-plugins-kafka) [![Gem Version](https://badge.fury.io/rb/sensu-plugins-kafka.svg)](https://badge.fury.io/rb/sensu-plugins-kafka)
 
+## Community Status
+
+This plugin is not officially supporting this plugin please see https://github.com/sensu-plugins/sensu-plugins-kafka for the officially maintained community plugin.
+
 ## Functionality
 
 **check-consumer-lag.rb**
