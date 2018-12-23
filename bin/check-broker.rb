@@ -27,7 +27,6 @@
 #
 
 require 'sensu-plugin/check/cli'
-require 'json'
 require 'zookeeper'
 
 class BrokerCheck < Sensu::Plugin::Check::CLI
@@ -45,12 +44,18 @@ class BrokerCheck < Sensu::Plugin::Check::CLI
          proc:        proc { |a| a.split(',') },
          required:    true
 
+  option :size,
+         description: 'Broker size',
+         short: '-s BROKER_SIZE',
+         long: '--broker-size BROKER_SIZE',
+         proc: proc(&:to_i)
   def run
     z = Zookeeper.new(config[:zookeeper])
 
-    brokers = z.get(path: '/brokers')[:data]
+    brokers = z.get_children(path: '/brokers/ids')[:children] 
 
-    critical "Broker '#{brokers}' not found"
+    critical "Broker '#{config[:ids] - brokers}' not found" unless (config[:ids] - brokers).length == 0
+    critical "Broker wrong size: #{brokers.length} (#{brokers}), expection #{config[:size]}" unless brokers.length == config[:size]
 
     ok
   rescue => e
