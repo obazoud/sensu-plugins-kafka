@@ -39,8 +39,8 @@ class BrokerCheck < Sensu::Plugin::Check::CLI
 
   option :ids,
          description: 'Brokers ids',
-         short:       '-n IDS',
-         long:        '--name IDS',
+         short:       '-i IDS',
+         long:        '--ids IDS',
          proc:        proc { |a| a.split(',') },
          required:    true
 
