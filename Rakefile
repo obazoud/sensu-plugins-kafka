@@ -7,7 +7,7 @@ require 'yard'
 require 'yard/rake/yardoc_task'
 require 'English' # needed for $CHILD_STATUS vs $?
 
-args = [:spec, :make_bin_executable, :yard, :rubocop, :check_binstubs]
+args = [:spec, :make_bin_executable, :yard, :check_binstubs]
 
 YARD::Rake::YardocTask.new do |t|
   OTHER_PATHS = %w().freeze
