@@ -55,7 +55,7 @@ class BrokerCheck < Sensu::Plugin::Check::CLI
     brokers = z.get_children(path: '/brokers/ids')[:children] 
 
     critical "Broker '#{config[:ids] - brokers}' not found" unless (config[:ids] - brokers).length == 0
-    critical "Broker wrong size: #{brokers.length} (#{brokers}), expection #{config[:size]}" unless brokers.length == config[:size]
+    critical "Broker wrong size: #{brokers.length} (#{brokers}), expecting #{config[:size]}, missing #{brokers- config[:ids]}" unless brokers.length == config[:size]
 
     ok
   rescue => e
